@@ -10,7 +10,6 @@ Creates a new .md file under Pilot_Reports/{sector}/ with:
 Usage:
   python scripts/add_ticker.py 2330 台積電                    # Auto-detect sector
   python scripts/add_ticker.py 2330 台積電 --sector Semiconductors  # Specify sector
-  python scripts/add_ticker.py --from-excel                   # Add all missing tickers from Excel
 
 After generating, use /update-enrichment to add business descriptions.
 """
@@ -18,7 +17,6 @@ After generating, use /update-enrichment to add business descriptions.
 import os
 import re
 import sys
-import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from utils import find_ticker_files, REPORTS_DIR, PROJECT_ROOT
@@ -90,11 +88,6 @@ def main():
         print("Usage:")
         print("  python scripts/add_ticker.py <ticker> <name>")
         print("  python scripts/add_ticker.py <ticker> <name> --sector <sector>")
-        print("  python scripts/add_ticker.py --from-excel")
-        return
-
-    if args[0] == "--from-excel":
-        add_from_excel()
         return
 
     # Parse arguments
@@ -130,57 +123,6 @@ def main():
     print(f"Created: {filepath}")
     print(f"Sector: {folder_name}")
     print(f"\nNext: use /update-enrichment to add business description, supply chain, and customers.")
-
-
-def add_from_excel():
-    """Add all tickers from Excel that don't have report files yet."""
-    try:
-        import pandas as pd
-    except ImportError:
-        print("pandas required. Install: pip install pandas openpyxl")
-        return
-
-    excel_path = os.path.join(PROJECT_ROOT, "data", "Taiwan Stock Coverage.xlsx")
-    if not os.path.exists(excel_path):
-        print(f"Excel file not found: {excel_path}")
-        return
-
-    df = pd.read_excel(excel_path, header=None)
-    existing = find_ticker_files()
-
-    missing = []
-    for _, row in df.iterrows():
-        ticker = str(row[0]).strip()
-        name = str(row[1]).strip() if pd.notna(row[1]) else "Unknown"
-        if re.match(r"^\d{4}$", ticker) and ticker not in existing:
-            missing.append((ticker, name))
-
-    if not missing:
-        print("All tickers from Excel already have report files.")
-        return
-
-    print(f"Found {len(missing)} missing tickers. Generating reports...\n")
-
-    created = failed = 0
-    for ticker, name in missing:
-        try:
-            content, sector = generate_report(ticker, name)
-            folder_name = sanitize_folder_name(sector)
-            output_dir = os.path.join(REPORTS_DIR, folder_name)
-            os.makedirs(output_dir, exist_ok=True)
-
-            filepath = os.path.join(output_dir, f"{ticker}_{name}.md")
-            with open(filepath, "w", encoding="utf-8") as f:
-                f.write(content)
-            print(f"  {ticker} ({name}): CREATED in {folder_name}/")
-            created += 1
-        except Exception as e:
-            print(f"  {ticker} ({name}): FAILED ({e})")
-            failed += 1
-
-        time.sleep(0.5)
-
-    print(f"\nDone. Created: {created} | Failed: {failed}")
 
 
 if __name__ == "__main__":

@@ -12,7 +12,6 @@ Add a new Taiwan-listed company to the coverage database. Generates the .md repo
 
 - `/add-ticker 2330 台積電` — auto-detect sector from yfinance
 - `/add-ticker 2330 台積電 --sector Semiconductors` — specify sector
-- `/add-ticker --from-excel` — add all missing tickers from the master Excel list
 
 ## Instructions
 
