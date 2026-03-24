@@ -153,6 +153,17 @@ Pilot_Reports/{Industry}/{Ticker}_{ChineseName}.md
 | Audit | `python scripts/audit_batch.py <batch> -v` | Single batch quality check |
 | Audit All | `python scripts/audit_batch.py --all -v` | Regression check on all completed batches |
 | Enrich | Edit DATA in `scripts/fix_batch.py`, then run | Apply enrichment to files |
+| Financials | `python scripts/update_financials.py [args]` | Refresh financial tables (annual 3yr + quarterly 4Q) |
+
+### Financial Update (`/update-financials`)
+Refreshes `## 財務概況` section + metadata (市值, 企業價值) from yfinance. Preserves all enrichment content.
+```
+python scripts/update_financials.py                     # ALL tickers
+python scripts/update_financials.py 2330                # Single ticker
+python scripts/update_financials.py 2330 2317 3034      # Multiple tickers
+python scripts/update_financials.py --batch 101         # All tickers in a batch
+python scripts/update_financials.py --sector Semiconductors  # Entire sector
+```
 
 ### Process
 ```
